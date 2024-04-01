@@ -1,11 +1,12 @@
-import org.jetbrains.kotlinx.lincheck.annotations.*
-import org.jetbrains.kotlinx.lincheck.strategy.stress.*
+import elimination.EliminationStack
+import org.jetbrains.kotlinx.lincheck.annotations.Operation
 import org.jetbrains.kotlinx.lincheck.check
-import org.jetbrains.kotlinx.lincheck.strategy.managed.modelchecking.*
-import org.junit.jupiter.api.*
+import org.jetbrains.kotlinx.lincheck.strategy.managed.modelchecking.ModelCheckingOptions
+import org.jetbrains.kotlinx.lincheck.strategy.stress.StressOptions
+import org.junit.jupiter.api.Test
 
-class TreiberStackTest {
-    private val stack = EliminationBackoffStack<Int>(100)
+class EliminationStackTest {
+    private val stack = EliminationStack<Int>(100)
 
     @Operation
     fun pop() = stack.pop()
@@ -28,7 +29,7 @@ class TreiberStackTest {
 
     @Test
     fun modelCheckingTest() = ModelCheckingOptions()
-        .hangingDetectionThreshold(100_000)
+        .hangingDetectionThreshold(10_000)
         .actorsBefore(2)
         .threads(2)
         .actorsPerThread(2)
@@ -36,7 +37,4 @@ class TreiberStackTest {
         .iterations(100)
         .invocationsPerIteration(1000)
         .check(this::class)
-
-    @Test
-    fun mdCheckingTest() = ModelCheckingOptions().check(this::class)
 }

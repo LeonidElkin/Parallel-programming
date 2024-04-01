@@ -1,3 +1,5 @@
+package elimination
+
 import kotlin.math.max
 import kotlin.math.min
 

@@ -1,14 +1,17 @@
+package elimination
+
 import java.util.concurrent.*
+import kotlin.time.DurationUnit
 
 class EliminationArray<T>(capacity: Int) {
-    private val exchanger = Array(capacity) { _ -> LockFreeExchanger<T>() }
+    private val exchanger = Array(capacity) { _ -> Exchanger<T>() }
 
     @Throws(TimeoutException::class)
     fun visit(value: T?, range: Int): T? {
         val slot = ThreadLocalRandom.current().nextInt(range)
         return (exchanger[slot].exchange(
             value, DURATION,
-            TimeUnit.MILLISECONDS
+            DurationUnit.MILLISECONDS
         ))
     }
 
