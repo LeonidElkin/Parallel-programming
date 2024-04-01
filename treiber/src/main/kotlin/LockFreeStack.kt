@@ -5,7 +5,7 @@ import kotlin.math.min
 
 open class LockFreeStack<T> : Stack<T> {
 
-    private var top = AtomicReference<Node<T>>(null)
+    protected var top = AtomicReference<Node<T>>(null)
     private var backoff: Backoff = Backoff(MIN_DELAY, MAX_DELAY)
 
     companion object {
@@ -30,7 +30,7 @@ open class LockFreeStack<T> : Stack<T> {
 
 
 
-    private fun tryPush(node: Node<T>): Boolean {
+    protected fun tryPush(node: Node<T>): Boolean {
         val oldTop = top.get()
         node.next = oldTop
         return (top.compareAndSet(oldTop, node))
