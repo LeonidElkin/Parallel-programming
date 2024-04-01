@@ -5,7 +5,7 @@ import org.jetbrains.kotlinx.lincheck.strategy.managed.modelchecking.*
 import org.junit.jupiter.api.*
 
 class TreiberStackTest {
-    private val stack = TreiberStack<Int>()
+    private val stack = EliminationBackoffStack<Int>(100)
 
     @Operation
     fun pop() = stack.pop()
@@ -17,8 +17,26 @@ class TreiberStackTest {
     fun push(value: Int) = stack.push(value)
 
     @Test
-    fun stressTest() = StressOptions().check(this::class)
+    fun stressTest() = StressOptions()
+        .actorsBefore(2)
+        .threads(2)
+        .actorsPerThread(2)
+        .actorsAfter(1)
+        .iterations(100)
+        .invocationsPerIteration(1000)
+        .check(this::class)
 
     @Test
-    fun modelCheckingTest() = ModelCheckingOptions().check(this::class)
+    fun modelCheckingTest() = ModelCheckingOptions()
+        .hangingDetectionThreshold(100_000)
+        .actorsBefore(2)
+        .threads(2)
+        .actorsPerThread(2)
+        .actorsAfter(1)
+        .iterations(100)
+        .invocationsPerIteration(1000)
+        .check(this::class)
+
+    @Test
+    fun mdCheckingTest() = ModelCheckingOptions().check(this::class)
 }

@@ -30,8 +30,4 @@ class TreiberStack<T> : Stack<T> {
 
     override fun head(): T? = top.get()?.item
 
-    class Node<E>(val item: E) {
-        var next: Node<E>? = null
-    }
-
 }
