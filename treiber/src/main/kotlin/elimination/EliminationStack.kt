@@ -1,18 +1,25 @@
 package elimination
 
-import LockFreeStack
+import Stack
 import Node
 import java.util.*
 import java.util.concurrent.TimeoutException
+import java.util.concurrent.atomic.AtomicReference
 
-class EliminationStack<T>(private val arrCapacity: Int) : LockFreeStack<T>() {
-
+class EliminationStack<T>(private val arrCapacity: Int) : Stack<T> {
+    private var top = AtomicReference<Node<T>>(null)
     private val eliminationArray = EliminationArray<T>(arrCapacity)
     private val policy = object : ThreadLocal<RangePolicy>() {
         @Synchronized
         override fun initialValue(): RangePolicy {
             return RangePolicy(arrCapacity)
         }
+    }
+
+    private fun tryPush(node: Node<T>): Boolean {
+        val oldTop = top.get()
+        node.next = oldTop
+        return (top.compareAndSet(oldTop, node))
     }
 
     @Throws(TimeoutException::class)
@@ -32,6 +39,13 @@ class EliminationStack<T>(private val arrCapacity: Int) : LockFreeStack<T>() {
                 rangePolicy.recordEliminationTimeout()
             }
         }
+    }
+
+    @Throws(EmptyStackException::class)
+    private fun tryPop(): Node<T>? {
+        val oldTop: Node<T> = top.get() ?: throw EmptyStackException()
+        val newTop = oldTop.next
+        return if (top.compareAndSet(oldTop, newTop)) oldTop else null
     }
 
     @Throws(EmptyStackException::class, TimeoutException::class)
