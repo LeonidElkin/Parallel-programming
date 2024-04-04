@@ -1,12 +1,18 @@
+package performance
+
+import Stack
+import TreiberStack
 import elimination.EliminationStack
 import kotlinx.coroutines.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ArgumentsSource
-import org.junit.jupiter.params.provider.ValueSource
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.system.measureNanoTime
 
 
 class PerformanceTest {
+
+    private val testAccuracy = 100
 
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     @ParameterizedTest
@@ -18,9 +24,10 @@ class PerformanceTest {
         for (st in 1..2) {
 
             val times: MutableList<Long> = mutableListOf()
-            for (i in 1..100) {
+            for (i in 1..testAccuracy) {
                 val stack: Stack<Int> = if (st == 1) EliminationStack(entry.threads) else TreiberStack()
-                val operations = arrayOf(entry.pushes, entry.pops, entry.heads)
+                val operations =
+                    arrayOf(AtomicInteger(entry.pushes), AtomicInteger(entry.pops), AtomicInteger(entry.heads))
                 val curTime = measureNanoTime {
                     var threadName = 0
                     runBlocking {
@@ -51,14 +58,14 @@ class PerformanceTest {
         for (st in 1..2) {
 
             val times: MutableList<Long> = mutableListOf()
-            for (i in 1..100) {
-                val stack: Stack<Int>  = if (st == 1) EliminationStack(entry.threads) else TreiberStack()
+            for (i in 1..testAccuracy) {
+                val stack: Stack<Int> = if (st == 1) EliminationStack(entry.threads) else TreiberStack()
 
                 val operations = Array(entry.threads) { _ ->
                     arrayOf(
-                        entry.pushes / entry.threads,
-                        entry.pops / entry.threads,
-                        entry.heads / entry.threads
+                        AtomicInteger(entry.pushes / entry.threads),
+                        AtomicInteger(entry.pops / entry.threads),
+                        AtomicInteger(entry.heads / entry.threads)
                     )
                 }
 
@@ -80,59 +87,33 @@ class PerformanceTest {
 
     }
 
-    private fun operation(operations: Array<Int>, stack: Stack<Int>) {
+    private fun operation(operations: Array<AtomicInteger>, stack: Stack<Int>) {
 
-        while (operations.sum() > 0) {
+        while (operations.sumOf { it.get() } > 0) {
 
             val opIndex = (0 until 3).random().let {
-                if (operations[it] > 0) return@let it
-                if (operations[(it + 1) % 3] > 0) return@let (it + 1)
+                if (operations[it].get() > 0) return@let it
+                if (operations[(it + 1) % 3].get() > 0) return@let (it + 1)
                 return@let (it + 2)
             } % 3
 
             when (opIndex) {
                 0 -> {
-                    operations[0]--
-                    stack.push(operations[0])
+                    operations[0].getAndDecrement()
+                    stack.push(operations[0].get())
                 }
 
                 1 -> {
-                    operations[1]--
+                    operations[1].getAndDecrement()
                     stack.pop()
                 }
 
                 2 -> {
-                    operations[2]--
+                    operations[2].getAndDecrement()
                     stack.head()
                 }
             }
         }
-    }
-
-    @ParameterizedTest
-    @ValueSource(ints = [10000, 100000, 1000000])
-    fun sequentialPerformanceTest(entry: Int) {
-        val times: MutableList<Long> = mutableListOf()
-        println("Sequential: $entry $entry 1000")
-        for (j in 1..500) {
-            val operations = arrayOf(entry, entry, 1000)
-            val stack = SequentialStack<Int>()
-            val curTime = measureNanoTime {
-
-                for (i in 0 until 3) {
-                    while (operations[i] != 0) {
-                        operations[i]--
-                        when (i) {
-                            0 -> stack.push(operations[0])
-                            1 -> stack.pop()
-                            2 -> stack.head()
-                        }
-                    }
-                }
-            }
-            times += curTime
-        }
-        println(times.sum() / times.size)
     }
 
 }
