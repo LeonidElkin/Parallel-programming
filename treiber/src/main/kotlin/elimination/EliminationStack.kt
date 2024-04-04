@@ -41,18 +41,26 @@ class EliminationStack<T>(private val arrCapacity: Int) : Stack<T> {
         }
     }
 
-    @Throws(EmptyStackException::class)
-    private fun tryPop(): Node<T>? {
-        val oldTop: Node<T> = top.get() ?: throw EmptyStackException()
-        val newTop = oldTop.next
-        return if (top.compareAndSet(oldTop, newTop)) oldTop else null
+    private fun tryPop(flag: Array<Boolean>): Node<T>? {
+        val oldTop: Node<T>? = top.get()
+        if (oldTop == null) {
+            flag[0] = true
+            return null
+        } else {
+            val newTop = oldTop.next
+            return if (top.compareAndSet(oldTop, newTop)) oldTop else null
+        }
     }
 
-    @Throws(EmptyStackException::class, TimeoutException::class)
-    override fun pop(): T {
+    @Throws(TimeoutException::class)
+    override fun pop(): T? {
         val rangePolicy: RangePolicy = policy.get()
         while (true) {
-            val returnNode = tryPop()
+            val isOldTopNull = arrayOf(false)
+            val returnNode = tryPop(isOldTopNull)
+            if (isOldTopNull[0]) {
+                return null
+            }
             if (returnNode != null) {
                 return returnNode.item
             } else try {

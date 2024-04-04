@@ -11,11 +11,11 @@ class EliminationArray<T>(capacity: Int) {
         val slot = ThreadLocalRandom.current().nextInt(range)
         return (exchanger[slot].exchange(
             value, DURATION,
-            DurationUnit.MILLISECONDS
+            DurationUnit.MICROSECONDS
         ))
     }
 
     companion object {
-        private const val DURATION = 1L
+        private const val DURATION = 10L
     }
 }

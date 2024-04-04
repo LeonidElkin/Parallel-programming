@@ -11,6 +11,7 @@ repositories {
 
 dependencies {
     implementation("net.jcip:jcip-annotations:1.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.9")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.jetbrains.kotlinx:lincheck:2.28.1")
