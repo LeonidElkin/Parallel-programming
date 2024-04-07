@@ -12,28 +12,26 @@ import kotlin.system.measureNanoTime
 
 class PerformanceTest {
 
-    private val testAccuracy = 100
+    private val testAccuracy = 20
 
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     @ParameterizedTest
     @ArgumentsSource(TestEntriesProvider::class)
-    fun performanceTest(entry: TestEntry) {
+    fun randomTest(entry: TestEntry) {
         val timing: MutableList<Long> = mutableListOf()
-        println("Default: ${entry.threads} ${entry.pushes} ${entry.pops} ${entry.heads}")
+        println("Random: ${entry.threads} ${entry.pushes} ${entry.pops} ${entry.heads}")
 
         for (st in 1..2) {
 
             val times: MutableList<Long> = mutableListOf()
-            for (i in 1..testAccuracy) {
+            repeat (testAccuracy) {
                 val stack: Stack<Int> = if (st == 1) EliminationStack(entry.threads) else TreiberStack()
                 val operations =
                     arrayOf(AtomicInteger(entry.pushes), AtomicInteger(entry.pops), AtomicInteger(entry.heads))
                 val curTime = measureNanoTime {
-                    var threadName = 0
                     runBlocking {
                         repeat(entry.threads) {
-                            threadName += 1
-                            launch(newSingleThreadContext(threadName.toString())) {
+                            launch(newSingleThreadContext(it.toString())) {
                                 operation(operations, stack)
                             }
                         }
@@ -51,14 +49,14 @@ class PerformanceTest {
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     @ParameterizedTest
     @ArgumentsSource(TestEntriesProvider::class)
-    fun performanceBlockyTest(entry: TestEntry) {
+    fun randomBlockyTest(entry: TestEntry) {
         val timing: MutableList<Long> = mutableListOf()
         println("Blocky: ${entry.threads} ${entry.pushes} ${entry.pops} ${entry.heads}")
 
         for (st in 1..2) {
 
             val times: MutableList<Long> = mutableListOf()
-            for (i in 1..testAccuracy) {
+            repeat (testAccuracy) {
                 val stack: Stack<Int> = if (st == 1) EliminationStack(entry.threads) else TreiberStack()
 
                 val operations = Array(entry.threads) { _ ->
@@ -74,6 +72,86 @@ class PerformanceTest {
                         repeat(entry.threads) {
                             launch(newSingleThreadContext(it.toString())) {
                                 operation(operations[it], stack)
+                            }
+                        }
+                    }
+                }
+                times += curTime
+            }
+            timing += (times.sum() / times.count())
+        }
+
+        println("Trieber Stack: ${timing[1]}, Elimination Stack: ${timing[0]}, Ratio: ${timing[1].toDouble() / timing[0]}")
+
+    }
+
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    @ParameterizedTest
+    @ArgumentsSource(TestEntriesProvider::class)
+    fun oneOpPerThreadTest(entry: TestEntry) {
+        val timing: MutableList<Long> = mutableListOf()
+        println("One per thread: ${entry.threads} ${entry.pushes} ${entry.pops} ${entry.heads}")
+
+        for (st in 1..2) {
+
+            val times: MutableList<Long> = mutableListOf()
+            repeat (testAccuracy) {
+                val stack: Stack<Int> = if (st == 1) EliminationStack(entry.threads) else TreiberStack()
+                val curTime = measureNanoTime {
+                    var threadName = 0
+                    runBlocking {
+                        repeat(entry.threads) {
+                            threadName++
+                            launch(newSingleThreadContext(threadName.toString())) {
+                                if (it % 2 == 0) {
+                                    repeat(entry.pushes / entry.threads) {
+                                        stack.push(it)
+                                    }
+                                } else {
+                                    repeat(entry.pops / entry.threads) {
+                                        stack.pop()
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                times += curTime
+            }
+            timing += (times.sum() / times.count())
+        }
+
+        println("Trieber Stack: ${timing[1]}, Elimination Stack: ${timing[0]}, Ratio: ${timing[1].toDouble() / timing[0]}")
+
+    }
+
+    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
+    @ParameterizedTest
+    @ArgumentsSource(TestEntriesProvider::class)
+    fun chessOrderTest(entry: TestEntry) {
+        val timing: MutableList<Long> = mutableListOf()
+        println("Chess order: ${entry.threads} ${entry.pushes} ${entry.pops} ${entry.heads}")
+
+        for (st in 1..2) {
+
+            val times: MutableList<Long> = mutableListOf()
+            repeat (testAccuracy) {
+                val stack: Stack<Int> = if (st == 1) EliminationStack(entry.threads) else TreiberStack()
+                val curTime = measureNanoTime {
+                    var threadName = 0
+                    runBlocking {
+                        repeat(entry.threads) {
+                            threadName++
+                            launch(newSingleThreadContext(threadName.toString())) {
+                                if (it % 2 == 0) {
+                                    repeat(entry.pushes / entry.threads) {
+                                        if (it % 2 == 0) stack.push(it) else stack.pop()
+                                    }
+                                } else {
+                                    repeat(entry.pops / entry.threads) {
+                                        if (it % 2 == 0) stack.pop() else stack.push(it)
+                                    }
+                                }
                             }
                         }
                     }
