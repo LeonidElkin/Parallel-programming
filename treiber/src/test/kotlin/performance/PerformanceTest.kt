@@ -12,7 +12,7 @@ import kotlin.system.measureNanoTime
 
 class PerformanceTest {
 
-    private val testAccuracy = 20
+    private val testAccuracy = 500
 
     @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class)
     @ParameterizedTest
