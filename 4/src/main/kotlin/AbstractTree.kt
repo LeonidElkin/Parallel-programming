@@ -1,24 +1,25 @@
-abstract class BSTree<K : Comparable<K>, V> {
+abstract class AbstractTree<K : Comparable<K>, V, NODE_TYPE : AbstractNode<K, V, NODE_TYPE>> {
 
-    protected var root: Node<K, V>? = null
+    protected var root: NODE_TYPE? = null
 
+    //insert function does not overwrite values
     abstract suspend fun insert(key: K, value: V)
     abstract suspend fun delete(key: K)
     abstract suspend fun find(key: K): V?
 
-    protected fun insertRec(node: Node<K, V>?, key: K, value: V): Node<K, V> {
-        node ?: return Node(key, value)
+
+    protected fun insertRec(recNode: NODE_TYPE?, insertedNode: NODE_TYPE): NODE_TYPE {
+        recNode ?: return insertedNode
 
         when {
-            key < node.key -> node.left = insertRec(node.left, key, value)
-            key > node.key -> node.right = insertRec(node.right, key, value)
-            else -> node.value = value
+            insertedNode.key < recNode.key -> recNode.left = insertRec(recNode.left, insertedNode)
+            insertedNode.key > recNode.key -> recNode.right = insertRec(recNode.right, insertedNode)
         }
 
-        return node
+        return recNode
     }
 
-    protected fun findRec(node: Node<K, V>?, key: K): Node<K, V>? {
+    protected fun findRec(node: NODE_TYPE?, key: K): NODE_TYPE? {
         node ?: return null
 
         return when {
@@ -28,7 +29,7 @@ abstract class BSTree<K : Comparable<K>, V> {
         }
     }
 
-    protected fun deleteRec(node: Node<K, V>?, key: K): Node<K, V>? {
+    protected fun deleteRec(node: NODE_TYPE?, key: K): NODE_TYPE? {
         node ?: return null
 
         when {
@@ -36,7 +37,7 @@ abstract class BSTree<K : Comparable<K>, V> {
             key > node.key -> node.right = deleteRec(node.right, key)
             else -> {
                 node.left ?: return node.right
-                node.right?: return node.left
+                node.right ?: return node.left
 
                 val minNode = findMin(node.right)
                 node.key = minNode.key
@@ -47,7 +48,7 @@ abstract class BSTree<K : Comparable<K>, V> {
         return node
     }
 
-    private fun findMin(node: Node<K, V>?): Node<K, V> {
+    private fun findMin(node: NODE_TYPE?): NODE_TYPE {
         var current = node
         while (current?.left != null) {
             current = current.left

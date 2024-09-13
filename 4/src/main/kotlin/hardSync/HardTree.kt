@@ -1,11 +1,16 @@
+package hardSync
+
+import AbstractTree
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
-class HardSyncTree<K : Comparable<K>, V> : BSTree<K, V>() {
+class HardTree<K : Comparable<K>, V> : AbstractTree<K, V, HardNode<K, V>>() {
+
     private val mutex = Mutex()
+
     override suspend fun insert(key: K, value: V) {
         mutex.withLock {
-            root = insertRec(root, key, value)
+            root = insertRec(root, HardNode(key, value))
         }
     }
 
