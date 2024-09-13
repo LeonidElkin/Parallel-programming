@@ -1,4 +1,4 @@
-package hardSync
+package syncTrees.hardSync
 
 import AbstractNode
 

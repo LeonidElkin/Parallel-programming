@@ -1,10 +1,10 @@
-package softSync
+package syncTrees
 
 import AbstractNode
 import kotlinx.coroutines.sync.Mutex
 
-class SoftNode<K : Comparable<K>, V>(
+class MutexNode<K : Comparable<K>, V>(
     key: K,
     value: V?,
     var mutex: Mutex = Mutex()
-) : AbstractNode<K, V, SoftNode<K, V>>(key, value)
+) : AbstractNode<K, V, MutexNode<K, V>>(key, value)
