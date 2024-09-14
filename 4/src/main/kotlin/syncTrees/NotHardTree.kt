@@ -19,7 +19,7 @@ abstract class NotHardTree<K : Comparable<K>, V> : AbstractTree<K, V, MutexNode<
                 if (key < parentNode.key) parentNode.left = MutexNode(key, value)
                 else parentNode.right = MutexNode(key, value)
             }
-        } else currentNode.mutex.unlock()
+        }
     }
 
     protected suspend fun deleteHelper(key: K, search: KSuspendFunction1<K, Pair<MutexNode<K, V>?, MutexNode<K, V>?>>) {
@@ -62,29 +62,46 @@ abstract class NotHardTree<K : Comparable<K>, V> : AbstractTree<K, V, MutexNode<
 
         var current = root
         var parent: MutexNode<K, V>? = null
-        var currentMutex: Mutex? = null
 
         while (current != null) {
+
+            val currentMutex = current.mutex
             if (!isOptimistic) {
-                currentMutex = current.mutex
-                currentMutex.lock()
-            }
-            when {
-                key < current.key -> {
-                    parent = current
-                    current = current.left
-                }
+                currentMutex.withLock {
+                    when {
+                        key < current!!.key -> {
+                            parent = current
+                            current = current!!.left
+                        }
 
-                key > current.key -> {
-                    parent = current
-                    current = current.right
-                }
+                        key > current!!.key -> {
+                            parent = current
+                            current = current!!.right
+                        }
 
-                else -> {
-                    return Pair(current, parent)
+                        else -> {
+                            return Pair(current, parent)
+                        }
+                    }
+                }
+            } else {
+                when {
+                    key < current!!.key -> {
+                        parent = current
+                        current = current!!.left
+                    }
+
+                    key > current!!.key -> {
+                        parent = current
+                        current = current!!.right
+                    }
+
+                    else -> {
+                        return Pair(current, parent)
+                    }
                 }
             }
-            if (!isOptimistic) currentMutex?.unlock()
+
         }
 
         return Pair(null, parent)

@@ -1,8 +1,5 @@
 package syncTrees.softSync
 
-import syncTrees.MutexNode
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import syncTrees.NotHardTree
 
 open class SoftTree<K : Comparable<K>, V> : NotHardTree<K, V>() {

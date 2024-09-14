@@ -1,15 +1,9 @@
 import kotlinx.coroutines.sync.Mutex
 
-abstract class AbstractTree<K : Comparable<K>, V, NODE_TYPE : AbstractNode<K, V, NODE_TYPE>> {
+abstract class AbstractTree<K : Comparable<K>, V, NODE_TYPE : AbstractNode<K, V, NODE_TYPE>> : Tree<K, V> {
 
     protected var root: NODE_TYPE? = null
     protected val mutex = Mutex()
-
-    //insert function does not overwrite values
-    abstract suspend fun insert(key: K, value: V)
-    abstract suspend fun find(key: K): V?
-    abstract suspend fun delete(key: K)
-
 
     protected fun insertRec(recNode: NODE_TYPE?, insertedNode: NODE_TYPE): NODE_TYPE {
         recNode ?: return insertedNode

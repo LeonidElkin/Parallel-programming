@@ -1,7 +1,6 @@
 package syncTrees.hardSync
 
 import AbstractTree
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class HardTree<K : Comparable<K>, V> : AbstractTree<K, V, HardNode<K, V>>() {
