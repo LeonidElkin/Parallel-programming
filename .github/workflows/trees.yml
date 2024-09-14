@@ -18,6 +18,9 @@ jobs:
       - name: Checkout project sources
         uses: actions/checkout@v4
 
+      - name: Give permission
+        run: chmod +x ./gradlew
+
       - name: Setup gradle
         uses: gradle/gradle-build-action@v2
 
